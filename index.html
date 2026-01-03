@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Pro Hand Cricket — IPL Tournament</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 🔊 SOUND EFFECTS -->
+<audio id="sndFour" src="https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.wav"></audio>
+<audio id="sndSix" src="https://assets.mixkit.co/sfx/preview/mixkit-crowd-cheer-201.wav"></audio>
+<audio id="sndWicket" src="https://assets.mixkit.co/sfx/preview/mixkit-impact-alert-bass-100.wav"></audio>
+
+<!-- ===========================
+     GAME UI (UNCHANGED)
+=========================== -->
+
+<div class="app-container">
+
+  <div id="welcomeScreen" class="welcome-screen">
+
+      <h2>Welcome to IPL Hand Cricket</h2>
+      <p style="color: #aaa; font-size: 1.1rem;">Select your team and game settings to begin the tournament.</p>
+      
+      <div class="welcome-controls">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Select Team:</label>
+              <select id="teamSelect" style="padding: 8px; width: 150px;"></select>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Overs per Match:</label>
+              <input id="oversInput" type="number" min="1" max="10" value="2" style="width: 50px; padding: 8px;">
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Wickets per Innings:</label>
+              <input id="wicketsInput" type="number" min="1" max="10" value="3" style="width: 50px; padding: 8px;">
+          </div>
+          <button id="startBtn" class="btn-primary" onclick="initTournament()" style="margin-top: 10px;">Start Tournament</button>
+      </div>
+  </div>
+
+  <div id="tournamentUI" class="tournament-ui">
+    
+    <header>
+      <h1>IPL HAND CRICKET (SMART AI)</h1>
+      <div style="display:flex; align-items:center; font-size:12px; color:#aaa;">
+          Playing as: <b id="userTeamDisplay" style="margin-left: 5px; color: var(--gold);">--</b> |
+          <span style="margin-left: 10px;">Matches Played:</span> <span id="logSummary" style="margin-left: 5px;">0</span>
+      </div>
+    </header>
+
+    <div class="data-col">
+      <div class="card tab-card">
+        
+        <div class="tab-nav">
+          <button id="tabCurrentMatch" class="tab-btn active" onclick="showTab('currentMatch')">🏏 Match Center</button>
+          <button id="tabSchedule" class="tab-btn" onclick="showTab('schedule')">📅 Schedule</button>
+          <button id="tabPoints" class="tab-btn" onclick="showTab('points')">📊 Points Table</button>
+        </div>
+        
+        <div id="currentMatchContent" class="tab-content match-tab-container">
+            <div class="match-center" id="matchCenterContent">
+                
+                <div id="noMatchUI" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; opacity:0.6; min-height: 300px; width: 100%;">
+                    <div style="font-size:3rem; margin-bottom:10px;">⏳</div>
+                    <div id="nextMatchInfo">Next Match: Loading...</div>
+                    <div style="font-size:12px; margin-top:5px;">Click "Advance Match" below to simulate other games.</div>
+                </div>
+
+                <div id="gameUI" style="display:none; width:90%; max-width:500px; margin:0 auto;">
+                  
+                    <div class="vs-header">
+                        <span class="team-name" id="pTeam">CSK</span>
+                        <span style="font-size: 1.5rem; font-weight: 900; color: #fff;">VS</span>
+                        <span class="team-name" id="aiTeam">RCB</span>
+                    </div>
+                    
+                    <div style="text-align:center; font-size:14px; color:var(--success); margin-bottom:10px;" id="matchStatus"></div>
+
+                    <div id="tossUI" style="text-align:center; margin: 40px 0;">
+                        <h2 id="tossMsg">Toss Time</h2>
+                        <div id="tossControls" class="btn-group" style="display:none; width:250px; margin:20px auto; display:flex; justify-content: space-around;">
+                            <button class="btn-primary" onclick="userTossDecision(true)">Bat First 🏏</button>
+                            <button class="btn-secondary" onclick="userTossDecision(false)">Bowl First ⚾</button>
+                        </div>
+                    </div>
+
+                    <div id="playUI" style="display:none;">
+                        <div class="scoreboard">
+                            <div class="score-box">
+                                <div class="val" id="uiScore">0/0</div>
+                                <div class="lbl">SCORE (Wkts)</div>
+                            </div>
+                            <div class="score-box">
+                                <div class="val" id="uiBalls" style="color: var(--accent);">0</div>
+                                <div class="lbl">BALLS LEFT</div>
+                            </div>
+                            <div class="score-box">
+                                <div class="val" id="uiTarget" style="color: var(--danger);">--</div>
+                                <div class="lbl" id="uiTargetLbl">TARGET</div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;" id="inningInfo">Innings 1</div>
+
+                        <div id="moveBoxes" style="display: flex; justify-content: space-around; gap: 10px; margin-bottom: 10px;">
+                            <div class="move-box" id="myMoveBox">
+                                <div class="move-lbl">MY MOVE</div>
+                                <div class="move-val" id="myMove">-</div>
+                            </div>
+                            <div class="move-box" id="oppMoveBox">
+                                <div class="move-lbl">AI MOVE</div>
+                                <div class="move-val" id="oppMove">-</div>
+                            </div>
+                        </div>
+                        
+                        <div id="overBreakPrompt" class="over-break-prompt" style="display:none;">
+                            <p style="font-weight: 700; margin-top: 0;">End of Over!</p>
+                            <button class="btn-primary" onclick="continuePlay()" style="width: 150px; margin-right: 10px;">Play Next Ball</button>
+                            <button class="btn-secondary" onclick="openScorecardModal()" style="width: 150px;">View Scorecard</button>
+                        </div>
+                        
+                        <div class="hand-pad" id="keypad"></div>
+                        
+                        <div style="text-align:center; margin-top: 10px;">
+                            <button class="btn-secondary" onclick="openScorecardModal()" style="padding: 5px 15px; font-size: 0.8rem;">View Scorecard (Live)</button>
+                        </div>
+                        
+                        <div style="margin-top:20px; text-align:center;">
+                            <button id="nextInnBtn" class="btn-primary" style="display:none; width:250px;" onclick="startSecondInnings()">Start 2nd Innings</button>
+                            <button id="endMatchBtn" class="btn-primary" style="display:none; width:200px;" onclick="finishMatch()">End Match</button>
+                        </div>
+                    </div>
+
+                    <div id="resultUI" style="display:none; text-align:center; padding-top:20px; min-height: 250px;">
+                        <div style="font-size:4rem; margin-bottom:10px;" id="resEmoji">🏆</div>
+                        <h2 id="resTitle" style="margin:0;">Won</h2>
+                        <p id="resDesc" style="color:#aaa; margin-bottom:20px;">Summary</p>
+                        <button class="btn-primary" style="width:150px;" onclick="closeMatch()">Continue</button>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="match-controls">
+                <button id="playMatchBtn" class="btn-primary" style="width: 200px; display:none;" onclick="startCurrentMatch()">Play Match</button>
+                <button id="simBtn" class="btn-secondary" style="width: 200px;" onclick="simulateUntilUser()" disabled>Advance Match</button>
+            </div>
+        </div>
+        
+        <div id="scheduleContent" class="tab-content" style="display:none; flex-direction:column; padding: 0;">
+            <div id="scheduleNav" class="schedule-nav">
+                </div>
+            <div id="scheduleList" class="schedule-container">
+                <div style="padding:10px; color:#aaa; font-size:12px;">Schedule loading...</div>
+            </div>
+        </div>
+        
+        <div id="pointsContent" class="tab-content" style="display:none; flex-direction:column; padding: 15px;">
+            <table>
+              <thead><tr><th class="rank-td">#</th><th>Team</th><th>P</th><th>W</th><th>Pts</th><th>PD</th></tr></thead>
+              <tbody id="ptBody"></tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col col-left">
+      <div class="card">
+        <h3>Match Log History</h3>
+        <div id="historyLog" style="overflow-y:auto; font-size:11px; color:#aaa; line-height:1.6; flex: 1;"></div>
+      </div>
+    </div>
+    
+    <div class="col col-right">
+      <div class="card">
+        <h3>Tournament Info</h3>
+        <p style="font-size: 13px; color: var(--accent); font-weight: 600;">The ultimate hand cricket championship!</p>
+        <ul style="font-size: 13px; color: #aaa; list-style-type: none; padding-left: 0;">
+            <li>* **League Format:** Single Round-Robin (45 Matches).</li>
+            <li>* **Playoffs:** Top 4 teams qualify for knockouts (SF1: 1st vs 4th, SF2: 2nd vs 3rd).</li>
+            <li>* **Scoring:** Win = 2 Pts, Tie/No Result = 1 Pt, Loss = 0 Pts.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<script async="async" data-cfasync="false" src="https://pl28390048.effectivegatecpm.com/35e364388db6292b71ea45a02703faa3/invoke.js"></script>
+<div id="container-35e364388db6292b71ea45a02703faa3"></div>
+<script>
+  atOptions = {
+    'key' : '0cdc7b323a8c9acd7a868ca69a98fa44',
+    'format' : 'iframe',
+    'height' : 250,
+    'width' : 300,
+    'params' : {}
+  };
+</script>
+<script src="https://www.highperformanceformat.com/0cdc7b323a8c9acd7a868ca69a98fa44/invoke.js"></script>
+<div id="scorecardModal" class="modal-overlay" onclick="closeScorecardModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Match Scorecard</h3>
+            <button class="modal-close-btn" onclick="closeScorecardModal()">×</button>
+        </div>
+        
+        <div class="score-select-nav">
+            <button id="scoreBtn1" class="btn-secondary" onclick="displayScorecard('inn1')">Innings 1</button>
+            <button id="scoreBtn2" class="btn-secondary" onclick="displayScorecard('inn2')">Innings 2</button>
+        </div>
+
+        <div id="scorecardDisplay">
+            <p style="color:#aaa; text-align:center;">Scorecard details will appear here.</p>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Game Script -->
+<script src="game.js"></script>
+</body>
+</html>
