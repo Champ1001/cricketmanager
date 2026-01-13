@@ -63,6 +63,7 @@ function updateCurrentMatchTabUI() {
         document.getElementById('playMatchBtn').style.display = 'none';
         document.getElementById('simBtn').disabled = true;
         return;
+    }
     // Update Match Info in Idle state
     if (!currentMatch || currentMatch.played) {
         document.getElementById('noMatchUI').style.display = 'flex';
