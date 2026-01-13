@@ -329,23 +329,21 @@ function initTournament(){
 
 function renderScheduleNav() {
     const nav = document.getElementById('scheduleNav');
-    if(nav.children.length > 0) return; // Only render once
+    nav.innerHTML = ''; // IMPORTANT FIX
 
     let roundIndex = 1;
     let navHTML = '';
 
-    // League Rounds
     for (let i = 0; i < MATCHES_PER_ROUND.length; i++) {
         navHTML += `<button class="schedule-nav-btn" onclick="setScheduleView('R${roundIndex}')">Round ${roundIndex}</button>`;
         roundIndex++;
     }
 
-    // Playoffs
     navHTML += `<button class="schedule-nav-btn" onclick="setScheduleView('P')">Playoffs</button>`;
     
     nav.innerHTML = navHTML;
-    setScheduleView('R1'); // Default to R1
 }
+
 
 function setScheduleView(view) {
     state.currentScheduleView = view;
@@ -425,7 +423,13 @@ function renderScheduleList(viewKey){
   
   document.getElementById('logSummary').innerText = state.schedule.filter(m => m.played).length;
 }
-
+function checkAndStartPlayoffs() {
+    const leagueMatches = state.schedule.filter(m => m.type === 'League');
+    const allLeaguePlayed = leagueMatches.every(m => m.played);
+    if (allLeaguePlayed && !state.schedule.some(m => m.type === 'SF1')) {
+        startPlayoffs();
+    }
+}
 /* --- SIMULATION --- */
 function simulateUntilUser(){
   document.getElementById('simBtn').disabled = true;
@@ -462,13 +466,13 @@ function simulateUntilUser(){
     else simAIMatch(m);
     
     state.matchIndex++;
+    checkAndStartPlayoffs();
     updateTable();
     renderScheduleList(state.currentScheduleView); 
     
     // Check if league ended (45 matches for single round robin with 10 teams)
-    if (state.matchIndex === 45 && state.schedule.length === 45) {
-        startPlayoffs();
-    }
+   
+
     
     // Update Final match bracket if SFs finished
     if (m.type.startsWith('SF')) updateFinalBracket(m);
@@ -760,23 +764,31 @@ function initInnings(inn){
 
 function updateInningContext() {
     const m = state.match;
-    const isUserBatting = (m.innings === 1 && m.userBatFirst) || (m.innings === 2 && !m.userBatFirst);
+    const isUserBatting =
+        (m.innings === 1 && m.userBatFirst) ||
+        (m.innings === 2 && !m.userBatFirst);
+
     const userTeam = state.userTeam;
     const oppTeam = m.meta.t1 === userTeam ? m.meta.t2 : m.meta.t1;
-    
+
     let statusText = "";
+
     if (m.innings === 1) {
-        statusText = isUserBatting ? `${userTeam} Batting. You are BATTING.` : `${oppTeam} Batting. You are BOWLING.`;
+        statusText = isUserBatting
+            ? `${userTeam} Batting — YOU ARE BATTING`
+            : `${oppTeam} Batting — YOU ARE BOWLING`;
     } else {
         const runsNeeded = m.target - m.score;
-        statusText = isUserBatting ? 
-            `${userTeam} Batting. You are CHASING ${m.target} (Need ${runsNeeded})` : 
-            `${oppTeam} Batting. AI is CHASING ${m.target} (Need ${runsNeeded})`;
+
+        statusText = isUserBatting
+            ? `${userTeam} Batting — CHASING ${m.target} (Need ${runsNeeded})`
+            : `${oppTeam} Batting — CHASING ${m.target} (Need ${runsNeeded})`;
     }
 
     document.getElementById('matchStatus').innerText = statusText;
     document.getElementById('inningInfo').innerText = `Innings ${m.innings}`;
 }
+
 
 
 function updateScoreBoard(){

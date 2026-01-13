@@ -557,12 +557,8 @@ body.landing .welcome-screen {
   align-items: center;
   overflow: hidden;
 }
-
 /* Prevent ad floating on sides */
-.bottom-native-ad iframe,
+/* .bottom-native-ad iframe,
 .bottom-native-ad div {
   max-width: 100% !important;
-}
-
-
- 
+} */
