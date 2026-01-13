@@ -57,7 +57,12 @@ function updateCurrentMatchTabUI() {
     document.getElementById('gameUI').style.display = 'none';
     document.getElementById('playMatchBtn').style.display = 'none';
     document.getElementById('simBtn').disabled = false;
-    
+    if (state.match && state.match.meta && !state.match.meta.played) {
+        document.getElementById('noMatchUI').style.display = 'none';
+        document.getElementById('gameUI').style.display = 'block';
+        document.getElementById('playMatchBtn').style.display = 'none';
+        document.getElementById('simBtn').disabled = true;
+        return;
     // Update Match Info in Idle state
     if (!currentMatch || currentMatch.played) {
         document.getElementById('noMatchUI').style.display = 'flex';
@@ -710,7 +715,7 @@ function startUserMatch(m){
 
   document.getElementById('pTeam').innerText = userTeamName;
   document.getElementById('aiTeam').innerText = aiTeamName;
-  
+  document.getElementById('oppMoveLabel').innerText = aiTeamName + " MOVE";
   // Disable controls while playing
   document.getElementById('simBtn').disabled = true;
   document.getElementById('playMatchBtn').style.display = 'none';
